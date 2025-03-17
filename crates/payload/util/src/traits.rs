@@ -101,13 +101,13 @@ mod tests {
     use reth_transaction_pool::{
         pool::{BestTransactionsWithPrioritizedSenders, PendingPool},
         test_utils::{MockOrdering, MockTransaction, MockTransactionFactory},
-        PoolTransaction,
+        PoolTransaction, PoolConfig,
     };
 
     #[test]
     fn test_best_transactions_chained_iterators() {
-        let mut priority_pool = PendingPool::new(MockOrdering::default());
-        let mut pool = PendingPool::new(MockOrdering::default());
+        let mut priority_pool = PendingPool::new(MockOrdering::default(), &PoolConfig::default());
+        let mut pool = PendingPool::new(MockOrdering::default(), &PoolConfig::default());
         let mut f = MockTransactionFactory::default();
 
         // Block composition
