@@ -5,6 +5,7 @@ use crate::{
     }, PoolConfig, Priority, SubPoolLimit, TransactionOrdering, ValidPoolTransaction
 };
 use rustc_hash::{FxHashMap, FxHashSet};
+use tracing::error;
 use std::{
     cmp::Ordering,
     collections::{hash_map::Entry, BTreeMap},
@@ -303,7 +304,10 @@ impl<T: TransactionOrdering> PendingPool<T> {
 
         // send the new transaction to any existing pendingpool static file iterators
         if self.new_transaction_notifier.receiver_count() > 0 {
-            let _ = self.new_transaction_notifier.send(tx.clone());
+            let result = self.new_transaction_notifier.send(tx.clone());
+            if result.is_err() {
+                error!("failed to send new transaction to pendingpool static file iterators");
+            }
         }
 
         self.by_id.insert(tx_id, tx);
