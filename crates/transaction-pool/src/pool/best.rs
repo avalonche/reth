@@ -14,7 +14,7 @@ use std::{
     sync::Arc,
 };
 use tokio::sync::broadcast::{error::TryRecvError, Receiver};
-use tracing::debug;
+use tracing::{debug, info};
 use tracing::error;
 
 /// An iterator that returns transactions that can be executed on the current state (*best*
@@ -123,7 +123,11 @@ impl<T: TransactionOrdering> BestTransactions<T> {
     fn try_recv(&mut self) -> Option<PendingTransaction<T>> {
         loop {
             match self.new_transaction_receiver.as_mut()?.try_recv() {
-                Ok(tx) => return Some(tx),
+                Ok(tx) => 
+                {
+                    info!("recv new transaction from pendingpool iterators, tx_hash: {:?}", tx.transaction.hash());
+                    return Some(tx);
+                }
                 // note TryRecvError::Lagged can be returned here, which is an error that attempts
                 // to correct itself on consecutive try_recv() attempts
 
@@ -133,6 +137,10 @@ impl<T: TransactionOrdering> BestTransactions<T> {
                     error!(" recv new transaction lagging from pendingpool iterators");
                     // Handle the case where the receiver lagged too far behind.
                     // `num_skipped` indicates the number of messages that were skipped.
+                }
+
+                Err(TryRecvError::Empty) => {
+                    return None;
                 }
 
                 // this case is still better than the existing iterator behavior where no new
