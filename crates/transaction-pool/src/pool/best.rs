@@ -15,6 +15,7 @@ use std::{
 };
 use tokio::sync::broadcast::{error::TryRecvError, Receiver};
 use tracing::debug;
+use tracing::error;
 
 /// An iterator that returns transactions that can be executed on the current state (*best*
 /// transactions).
@@ -129,13 +130,17 @@ impl<T: TransactionOrdering> BestTransactions<T> {
                 // the cost of ignoring this error is allowing old transactions to get
                 // overwritten after the chan buffer size is met
                 Err(TryRecvError::Lagged(_)) => {
+                    error!(" recv new transaction lagging from pendingpool iterators");
                     // Handle the case where the receiver lagged too far behind.
                     // `num_skipped` indicates the number of messages that were skipped.
                 }
 
                 // this case is still better than the existing iterator behavior where no new
                 // pending txs are surfaced to consumers
-                Err(_) => return None,
+                Err(e) => {
+                    error!("failed to recv new transaction from pendingpool static file iterators: {:?}", e);
+                    return None;
+                }
             }
         }
     }
