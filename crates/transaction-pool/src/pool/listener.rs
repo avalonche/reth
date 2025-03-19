@@ -18,7 +18,7 @@ use tokio::sync::mpsc::{
 };
 
 /// The size of the event channel used to propagate transaction events.
-const TX_POOL_EVENT_CHANNEL_SIZE: usize = 1024;
+const TX_POOL_EVENT_CHANNEL_SIZE: usize = 100000;
 
 /// A Stream that receives [`TransactionEvent`] only for the transaction with the given hash.
 #[derive(Debug)]
