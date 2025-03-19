@@ -219,6 +219,7 @@ impl<T: TransactionOrdering> Iterator for BestTransactions<T> {
 
             // Insert transactions that just got unlocked.
             if let Some(unlocked) = self.all.get(&best.unlocks()) {
+                info!("insert new transaction into best transactions, unlocked set tx_hash: {:?}", unlocked.transaction.hash());
                 self.independent.insert(unlocked.clone());
             }
 
