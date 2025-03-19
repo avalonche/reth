@@ -14,8 +14,7 @@ use std::{
     sync::Arc,
 };
 use tokio::sync::broadcast::{error::TryRecvError, Receiver};
-use tracing::{debug, info};
-use tracing::error;
+use tracing::{error, info};
 
 /// An iterator that returns transactions that can be executed on the current state (*best*
 /// transactions).
@@ -123,9 +122,11 @@ impl<T: TransactionOrdering> BestTransactions<T> {
     fn try_recv(&mut self) -> Option<PendingTransaction<T>> {
         loop {
             match self.new_transaction_receiver.as_mut()?.try_recv() {
-                Ok(tx) => 
-                {
-                    info!("recv new transaction from pendingpool iterators, tx_hash: {:?}", tx.transaction.hash());
+                Ok(tx) => {
+                    info!(
+                        "recv new transaction from pendingpool iterators, tx_hash: {:?}",
+                        tx.transaction.hash()
+                    );
                     return Some(tx);
                 }
                 // note TryRecvError::Lagged can be returned here, which is an error that attempts
@@ -169,11 +170,17 @@ impl<T: TransactionOrdering> BestTransactions<T> {
             //  same logic as PendingPool::add_transaction/PendingPool::best_with_unlocked
             let tx_id = *pending_tx.transaction.id();
             if self.ancestor(&tx_id).is_none() {
-                info!("insert new transaction into best transactions, independent set tx_hash: {:?}", pending_tx.transaction.hash());
+                info!(
+                    "insert new transaction into best transactions, independent set tx_hash: {:?}",
+                    pending_tx.transaction.hash()
+                );
                 self.independent.insert(pending_tx.clone());
             }
 
-            info!("insert new transaction into best transactions, all set tx_hash: {:?}", pending_tx.transaction.hash());
+            info!(
+                "insert new transaction into best transactions, all set tx_hash: {:?}",
+                pending_tx.transaction.hash()
+            );
             self.all.insert(tx_id, pending_tx);
         }
     }
@@ -207,20 +214,24 @@ impl<T: TransactionOrdering> Iterator for BestTransactions<T> {
             let best = self.pop_best()?;
             let sender_id = best.transaction.sender_id();
 
+            // Insert transactions that just got unlocked.
+            if let Some(unlocked) = self.all.get(&best.unlocks()) {
+                info!(
+                    "insert new transaction into best transactions, unlocked set tx_hash: {:?}",
+                    unlocked.transaction.hash()
+                );
+                self.independent.insert(unlocked.clone());
+                self.invalid.remove(&unlocked.transaction.sender_id());
+            }
+
             // skip transactions for which sender was marked as invalid
             if self.invalid.contains(&sender_id) {
-                debug!(
+                info!(
                     target: "txpool",
                     "[{:?}] skipping invalid transaction",
                     best.transaction.hash()
                 );
                 continue
-            }
-
-            // Insert transactions that just got unlocked.
-            if let Some(unlocked) = self.all.get(&best.unlocks()) {
-                info!("insert new transaction into best transactions, unlocked set tx_hash: {:?}", unlocked.transaction.hash());
-                self.independent.insert(unlocked.clone());
             }
 
             if self.skip_blobs && best.transaction.transaction.is_eip4844() {
@@ -391,7 +402,9 @@ where
 mod tests {
     use super::*;
     use crate::{
-        pool::pending::PendingPool, test_utils::{MockOrdering, MockTransaction, MockTransactionFactory}, BestTransactions, PoolConfig, Priority
+        pool::pending::PendingPool,
+        test_utils::{MockOrdering, MockTransaction, MockTransactionFactory},
+        BestTransactions, PoolConfig, Priority,
     };
     use alloy_primitives::U256;
 

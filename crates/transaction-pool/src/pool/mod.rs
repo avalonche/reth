@@ -92,7 +92,7 @@ use reth_primitives::Recovered;
 use rustc_hash::FxHashMap;
 use std::{collections::HashSet, fmt, sync::Arc, time::Instant};
 use tokio::sync::mpsc;
-use tracing::{debug, trace, warn};
+use tracing::{debug, trace, warn, info};
 mod events;
 use crate::{
     blobstore::BlobStore,
@@ -984,7 +984,7 @@ impl PendingTransactionHashListener {
                 Ok(()) => {}
                 Err(err) => {
                     return if matches!(err, mpsc::error::TrySendError::Full(_)) {
-                        debug!(
+                        info!(
                             target: "txpool",
                             "[{:?}] failed to send pending tx; channel full",
                             tx_hash,
@@ -1025,7 +1025,7 @@ impl<T: PoolTransaction> TransactionListener<T> {
                 Ok(()) => {}
                 Err(err) => {
                     return if let mpsc::error::TrySendError::Full(event) = err {
-                        debug!(
+                        info!(
                             target: "txpool",
                             "[{:?}] failed to send pending tx; channel full",
                             event.transaction.hash(),
