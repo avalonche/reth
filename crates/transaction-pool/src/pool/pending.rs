@@ -2,10 +2,10 @@ use crate::{
     identifier::{SenderId, TransactionId}, pool::{
         best::{BestTransactions, BestTransactionsWithFees},
         size::SizeTracker,
-    }, PoolConfig, Priority, SubPoolLimit, TransactionOrdering, ValidPoolTransaction
+    }, PoolConfig, PoolTransaction, Priority, SubPoolLimit, TransactionOrdering, ValidPoolTransaction
 };
 use rustc_hash::{FxHashMap, FxHashSet};
-use tracing::error;
+use tracing::{error, info};
 use std::{
     cmp::Ordering,
     collections::{hash_map::Entry, BTreeMap},
@@ -140,8 +140,10 @@ impl<T: TransactionOrdering> PendingPool<T> {
             let tx_id = *tx.id();
             let transaction = PendingTransaction { submission_id, transaction: tx, priority };
             if best.ancestor(&tx_id).is_none() {
+                info!("insert new transaction into best transactions unlocked, independent set tx_hash: {:?}", transaction.transaction.hash());
                 best.independent.insert(transaction.clone());
             }
+            info!("insert new transaction into best transactions unlocked, all set tx_hash: {:?}", transaction.transaction.hash());
             best.all.insert(tx_id, transaction);
         }
 

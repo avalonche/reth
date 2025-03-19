@@ -169,8 +169,11 @@ impl<T: TransactionOrdering> BestTransactions<T> {
             //  same logic as PendingPool::add_transaction/PendingPool::best_with_unlocked
             let tx_id = *pending_tx.transaction.id();
             if self.ancestor(&tx_id).is_none() {
+                info!("insert new transaction into best transactions, independent set tx_hash: {:?}", pending_tx.transaction.hash());
                 self.independent.insert(pending_tx.clone());
             }
+
+            info!("insert new transaction into best transactions, all set tx_hash: {:?}", pending_tx.transaction.hash());
             self.all.insert(tx_id, pending_tx);
         }
     }
