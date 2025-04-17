@@ -154,6 +154,7 @@ impl<T: TransactionOrdering> BestTransactions<T> {
         while let Some(pending_tx) = self.try_recv() {
             //  same logic as PendingPool::add_transaction/PendingPool::best_with_unlocked
             let tx_id = *pending_tx.transaction.id();
+            debug!("adding new transaction in best transactions: {:?}", pending_tx.transaction.hash());
             if self.ancestor(&tx_id).is_none() {
                 self.independent.insert(pending_tx.clone());
             }
@@ -202,6 +203,7 @@ impl<T: TransactionOrdering> Iterator for BestTransactions<T> {
 
             // Insert transactions that just got unlocked.
             if let Some(unlocked) = self.all.get(&best.unlocks()) {
+                debug!("adding unlocked transaction in best transactions: {:?}", unlocked.transaction.hash());
                 self.independent.insert(unlocked.clone());
             }
 
