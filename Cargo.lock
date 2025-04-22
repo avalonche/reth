@@ -13083,3 +13083,8 @@ dependencies = [
  "cc",
  "pkg-config",
 ]
+
+[[patch.unused]]
+name = "op-revm"
+version = "1.0.0"
+source = "git+https://github.com/bluealloy/revm?tag=v66#398ef740aff6b0d15f2a6a155367b0257954a103"
