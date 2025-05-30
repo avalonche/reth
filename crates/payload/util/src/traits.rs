@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use alloy_primitives::{map::HashSet, Address};
 use reth_transaction_pool::{PoolTransaction, ValidPoolTransaction};
-use tracing::info;
+use tracing::{debug, info};
 
 /// Iterator that returns transactions for the block building process in the order they should be
 /// included in the block.
@@ -80,7 +80,7 @@ where
         loop {
             let tx = self.best.next()?;
             if self.invalid.contains(tx.sender_ref()) {
-                info!(target: "payload", "skipping invalid transaction: {:?}", tx.transaction.hash());
+                debug!(target: "payload", "skipping invalid transaction: {:?}", tx.transaction.hash());
                 continue
             }
             return Some(tx.transaction.clone())
@@ -88,7 +88,7 @@ where
     }
 
     fn mark_invalid(&mut self, sender: Address, _nonce: u64) {
-        info!(target: "payload", "marking invalid transaction: {:?}", sender);
+        debug!(target: "payload", "marking invalid transaction: {:?}", sender);
         self.invalid.insert(sender);
     }
 }
